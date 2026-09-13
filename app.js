@@ -37,9 +37,22 @@ form.addEventListener('submit',e=>{
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
 if(window.ScrollCraft)ScrollCraft.mount(document.body);
 const motion=$('#ruch'),demo=$('.desk-demo'),hero=$('.hero'),obj=$('.hero-object'),halo=$('.hero-halo');
+const liftVideo=$('.desk-lift-video');
+let liftVideoReady=false,liftPending=0;
+if(liftVideo){
+ liftVideo.src=matchMedia('(max-width:700px)').matches?'assets/lift-m.mp4':'assets/lift.mp4';
+ liftVideo.addEventListener('loadedmetadata',()=>{liftVideoReady=true;scrubVideo(liftPending);requestAnimationFrame(()=>scrubVideo(liftPending));});
+}
+function scrubVideo(v){
+ liftPending=v;
+ if(!liftVideo||!liftVideoReady)return;
+ const dur=liftVideo.duration||5.083;
+ try{liftVideo.currentTime=Math.min(Math.max(v*dur,0),dur*0.999);}catch(e){}
+}
 let manualLift=null,pointerX=0,pointerY=0,pending=false;
 function setLift(v){
  demo.style.setProperty('--lift',v.toFixed(4));
+ scrubVideo(v);
  demo.dataset.scVerifyState='tabletop-translate-'+Math.round(v*(innerWidth<=700?78:130));
  $('#position-name').textContent=v>.55?'Przestrzeń na nowe pomysły.':'Miejsce na skupienie.';
  $$('[data-lift]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.lift)===(v>.5?1:0))));
